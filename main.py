@@ -5,11 +5,18 @@ from newspaper import Article
 from bs4 import BeautifulSoup
 import requests
 
-# Ensure NLTK punkt tokenizer is available
+# 🧹 Clean NLTK resource check & download
 try:
     nltk.data.find("tokenizers/punkt")
 except LookupError:
-    nltk.download("punkt", quiet=True)
+    nltk.download("punkt")
+
+# 🩹 Override any misreference to 'punkt_tab' if caused by old cache (optional precaution)
+if hasattr(nltk, 'data'):
+    import os
+    path = os.path.join(nltk.data.find("tokenizers/punkt"), '..', 'punkt_tab')
+    if os.path.exists(path):
+        os.remove(path)  # this will only run if some bad file exists
 
 def extract_authors(url):
     """ Extract authors from multiple sources (Newspaper3k + BeautifulSoup) """
@@ -20,17 +27,12 @@ def extract_authors(url):
         article.parse()
         article.nlp()
 
-        # Extract Metadata
         pub_date = article.meta_data.get('datePublished', 'Not Available')
-
-        # Extract Authors (Improved)
         authors = ', '.join(article.authors) if article.authors else "Not Available"
 
-        # Debugging Info
         st.write(f"Newspaper3k Authors: {article.authors}")
         st.write(f"Metadata: {article.meta_data}")
 
-        # Check alternative metadata fields
         if authors == "Not Available":
             possible_author_keys = ["author", "dc.creator", "byline"]
             for key in possible_author_keys:
@@ -38,11 +40,9 @@ def extract_authors(url):
                     authors = article.meta_data[key]
                     break
 
-        # If still not found, use BeautifulSoup as a fallback
         if authors == "Not Available":
             response = requests.get(url)
             soup = BeautifulSoup(response.text, "html.parser")
-            
             meta_authors = soup.find("meta", {"name": "author"})
             if meta_authors and meta_authors.get("content"):
                 authors = meta_authors["content"]
@@ -53,11 +53,9 @@ def extract_authors(url):
         st.error(f"Error Extracting Article: {e}")
         return None, None, "Error retrieving authors"
 
-# Streamlit page configuration
 st.set_page_config(page_title="News Summarizer", layout="wide")
 st.title("📰 News Summarizer & Sentiment Analyzer")
 
-# URL Input
 url = st.text_input("Enter News Article URL")
 
 if st.button("Summarize"):
@@ -77,11 +75,9 @@ if st.button("Summarize"):
             st.subheader("Summary")
             st.write(article.summary if article.summary else "Summary not available")
 
-            # Sentiment Analysis
             analysis = TextBlob(article.text)
             polarity = analysis.polarity
             sentiment_value = "Positive" if polarity > 0 else "Negative" if polarity < 0 else "Neutral"
-
             st.subheader("Sentiment Analysis")
             st.write(f"Polarity: {polarity:.2f}, Sentiment: {sentiment_value}")
         else:
