@@ -1,25 +1,20 @@
 import streamlit as st
 import nltk
-from textblob import TextBlob
+from textblob import TextBlob, download_corpora
 from newspaper import Article
 from bs4 import BeautifulSoup
 import requests
 
-# 🧹 Clean NLTK resource check & download
+# Ensure NLTK punkt tokenizer is available
 try:
     nltk.data.find("tokenizers/punkt")
 except LookupError:
     nltk.download("punkt")
 
-# 🩹 Override any misreference to 'punkt_tab' if caused by old cache (optional precaution)
-if hasattr(nltk, 'data'):
-    import os
-    path = os.path.join(nltk.data.find("tokenizers/punkt"), '..', 'punkt_tab')
-    if os.path.exists(path):
-        os.remove(path)  # this will only run if some bad file exists
+# Ensure TextBlob corpora are available (especially punkt)
+download_corpora.download_all()
 
 def extract_authors(url):
-    """ Extract authors from multiple sources (Newspaper3k + BeautifulSoup) """
     article = Article(url)
 
     try:
@@ -78,6 +73,7 @@ if st.button("Summarize"):
             analysis = TextBlob(article.text)
             polarity = analysis.polarity
             sentiment_value = "Positive" if polarity > 0 else "Negative" if polarity < 0 else "Neutral"
+
             st.subheader("Sentiment Analysis")
             st.write(f"Polarity: {polarity:.2f}, Sentiment: {sentiment_value}")
         else:
