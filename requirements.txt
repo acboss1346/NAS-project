@@ -4,4 +4,4 @@ textblob
 newspaper3k
 beautifulsoup4
 requests
-lxml
+lxml==4.9.3
