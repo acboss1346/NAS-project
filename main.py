@@ -5,11 +5,11 @@ from newspaper import Article
 from bs4 import BeautifulSoup
 import requests
 
-# Download NLTK data
+# Ensure NLTK punkt tokenizer is available
 try:
-    nltk.download("punkt")
-except Exception as e:
-    st.error(f"NLTK Download Error: {e}")
+    nltk.data.find("tokenizers/punkt")
+except LookupError:
+    nltk.download("punkt", quiet=True)
 
 def extract_authors(url):
     """ Extract authors from multiple sources (Newspaper3k + BeautifulSoup) """
@@ -77,9 +77,11 @@ if st.button("Summarize"):
             st.subheader("Summary")
             st.write(article.summary if article.summary else "Summary not available")
 
+            # Sentiment Analysis
             analysis = TextBlob(article.text)
             polarity = analysis.polarity
             sentiment_value = "Positive" if polarity > 0 else "Negative" if polarity < 0 else "Neutral"
+
             st.subheader("Sentiment Analysis")
             st.write(f"Polarity: {polarity:.2f}, Sentiment: {sentiment_value}")
         else:
