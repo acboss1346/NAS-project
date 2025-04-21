@@ -1,0 +1,6 @@
+streamlit
+nltk
+textblob
+newspaper3k
+beautifulsoup4
+requests
