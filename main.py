@@ -17,9 +17,17 @@ url = st.text_input("Enter News Article URL")
 # Function to extract article, authors, and date
 def extract_authors(url):
     """Extracts article, authors, and publication date."""
-    article = Article(url)
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
+    }
+
     try:
-        article.download()
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+
+        article = Article(url)
+        article.set_html(response.text)
+        article.download_state = 2  # Mark as downloaded
         article.parse()
         article.nlp()
 
@@ -27,15 +35,6 @@ def extract_authors(url):
         authors = ', '.join(article.authors) if article.authors else "Not Available"
 
         if authors == "Not Available":
-            # Check other possible metadata fields
-            for key in ["author", "dc.creator", "byline"]:
-                if key in article.meta_data:
-                    authors = article.meta_data[key]
-                    break
-
-        if authors == "Not Available":
-            # Try extracting from raw HTML as fallback
-            response = requests.get(url)
             soup = BeautifulSoup(response.text, "html.parser")
             meta_authors = soup.find("meta", {"name": "author"})
             if meta_authors and meta_authors.get("content"):
