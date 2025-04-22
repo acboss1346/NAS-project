@@ -5,22 +5,19 @@ from textblob import TextBlob
 import requests
 from bs4 import BeautifulSoup
 
-# Download necessary NLTK data
-nltk.download('punkt')
+# Ensure NLTK resources are downloaded
+try:
+    nltk.data.find('tokenizers/punkt')
+except LookupError:
+    nltk.download('punkt')
 
-# Page Title
 st.title("📰 News Summarizer & Sentiment Analyzer")
-
-# Input URL
 url = st.text_input("Enter News Article URL")
 
-# Function to extract article, authors, and date
 def extract_authors(url):
-    """Extracts article, authors, and publication date."""
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
     }
-
     try:
         response = requests.get(url, headers=headers)
         response.raise_for_status()
@@ -31,7 +28,7 @@ def extract_authors(url):
         article.parse()
         article.nlp()
 
-        pub_date = article.meta_data.get('datePublished', 'Not Available')
+        pub_date = article.publish_date.strftime("%Y-%m-%d") if article.publish_date else "Not Available"
         authors = ', '.join(article.authors) if article.authors else "Not Available"
 
         if authors == "Not Available":
@@ -44,12 +41,10 @@ def extract_authors(url):
 
     except Exception as e:
         st.error(f"Error Extracting Article: {e}")
-        return None, None, "Error retrieving authors"
+        return None, None, None
 
-# Process and display output
 if url:
     article, pub_date, authors = extract_authors(url)
-
     if article:
         st.subheader("📰 Title")
         st.write(article.title)
