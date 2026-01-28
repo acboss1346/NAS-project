@@ -1,8 +1,8 @@
 streamlit
-nltk
+nltk>=3.5
 textblob
 newspaper3k
 beautifulsoup4
 requests
-lxml==4.9.3
-nltk>=3.5
+lxml
+
