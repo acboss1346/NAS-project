@@ -5,4 +5,5 @@ newspaper3k
 beautifulsoup4
 requests
 lxml
+lxml_html_clean
 
